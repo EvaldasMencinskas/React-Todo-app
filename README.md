@@ -1,1 +1,1 @@
-React with typescript and mock api todo app
+React with mock api todo app
