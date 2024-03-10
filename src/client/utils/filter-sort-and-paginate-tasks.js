@@ -1,4 +1,8 @@
-export function filterSortAndPaginateTasks(tasks, titleFilter, completedFilter, page, limit, sortBy, sortOrder) {
+export function filterSortAndPaginateTasks(tasks, titleFilter, completedFilter, pageInputValue, limitInputValue, sortBy, sortOrder) {
+
+  const page = parseInt(pageInputValue, 10);
+  const limit = parseInt(limitInputValue, 10);
+
   const filteredTasks = titleFilter
     ? tasks.filter(task =>
         task.title.toLowerCase().includes(titleFilter.toLowerCase())
