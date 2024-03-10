@@ -4,34 +4,11 @@ const API_BASE_URL = new URL('https://65e9d18dc9bf92ae3d3a5376.mockapi.io/tasks'
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const getTasks = async (page, limit, completed, title) => {
-  const existingFilters = JSON.parse(localStorage?.getItem('filters')) || {};
-
-  const queryParams = new URLSearchParams();
-
-  if (title && title.trim() !== '') {
-  queryParams.append('title', title);
-  }
-  if (completed !== null) {
-    queryParams.append('completed', completed);
-  } else if (existingFilters?.completed === true || 
-    existingFilters?.completed ===  false){
-      queryParams.append('completed', existingFilters?.completed);
-    }
-
-  queryParams.append('sortBy', 'createdAt');
-  queryParams.append('order', 'desc');
-
-  queryParams.append('page', page);
-  queryParams.append('limit', limit);
-
-  const apiUrl = `${API_BASE_URL}?${queryParams.toString()}`;
-
+export const getTasks = async () => {
   try {
-    const response = await axios.get(apiUrl, {
+    const response = await axios.get(API_BASE_URL, {
       validateStatus: (status) => status === 200 || status === 404,
     });
-
     if (response.status === 200) {
       return response.data;
     } else if (response.status === 404) {
@@ -47,43 +24,6 @@ export const getTasks = async (page, limit, completed, title) => {
       return getTasks(page, limit, completed, title);
     }
     console.error('Error fetching data:', error);
-    throw error;
-  }
-};
-
-export const getTotalCount = async (completed, title) => {
-  const queryParams = new URLSearchParams();
-
-  if (title && title.trim() !== '') {
-  queryParams.append('title', title);
-  }
-  if (completed !== null) {
-    queryParams.append('completed', completed);
-  }
-
-  const apiUrl = `${API_BASE_URL}?${queryParams.toString()}`;
-
-  try {
-    const response = await axios.get(apiUrl, {
-      validateStatus: (status) => status === 200 || status === 404,
-    });
-
-    if (response.status === 200) {
-      const totalCount = response.data.length;
-      return totalCount;
-    }else if (response.status === 404) {
-      return [];
-    } else {
-      throw new Error(`Failed to total count data. Status: ${response.status}`);
-    }
-  } catch (error) {
-    if (error.response && error.response.status === 429) {
-      const retryAfter = error.response.headers['retry-after'] || 5000;
-      console.log(`Rate limited. Retrying after ${retryAfter / 1000} seconds.`);
-      await delay(retryAfter);
-      return getTotalCount(completed, title);
-    }
-    console.error('Error fetching total count:', error);
     throw error;
   }
 };
@@ -124,7 +64,7 @@ export const insertTask = async (newTaskData) => {
   }
 };
 
-export const updateTaskTitle = async (task, updatedData) => {
+export const updateTask = async (task, updatedData) => {
   try {
     const response = await axios.put(
       `${API_BASE_URL}/${task}`,

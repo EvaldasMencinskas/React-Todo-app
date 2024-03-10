@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import TodoItem from './components/todo-item';
-import { getTasks, getTotalCount, insertTask } from '../../axios/client-axios';
+import { getTasks, insertTask } from '../../axios/client-axios';
 import { useDebounce } from '../../utils/debounce';
 import Paginator from './components/paginator';
 import Filters from './components/filters';
+import { isValid } from '../../utils/is-valid';
+import { filterSortAndPaginateTasks } from '../../utils/filter-sort-and-paginate-tasks';
 
  const PageTodo = () => {
 
@@ -18,20 +20,53 @@ import Filters from './components/filters';
   const [tasksState, setTasksState] = React?.useState([]);
   const [insertState, setInsertState] = React?.useState(false);
   const [insertDataState, setInsertDataState] = React?.useState(null);
+  const [refresh, setRefresh] = React.useState(false);
+
+  // possibility to use them for sorting from ui.
+  const [sortOrder, setSortOrder] = React.useState('desc');
+  const [sortBy, setSortBy] = React.useState('createdAt');
 
   const existingFilters = JSON.parse(localStorage.getItem('filters')) || {};
+  const existingData = JSON.parse(localStorage.getItem('todoData')) || {};
 
   const debounceSearchValue = useDebounce(existingFilters?.title, 300);
 
-  const fetchTotalCount = async (completedFilter, titleFilter) => {
-      const totalCount = await getTotalCount(completedFilter, titleFilter);
-      setTotalCount(() => totalCount)
-  };
+  const fetchTasks = async () => {
+  if (
+    existingData?.tasks &&
+    existingData?.timestamp &&
+    isValid(existingData?.timestamp)
+  ) {
+    const paginatedTasks = filterSortAndPaginateTasks(
+      existingData?.tasks,
+      debounceSearchValue,
+      completedFilterState,
+      page,
+      limit,
+      sortBy,
+      sortOrder);
+    setTasksState(paginatedTasks);
+    setTotalCount(existingData?.tasks?.length);
+  } else {
+    const tasksData = await getTasks();
+    const paginatedTasks = filterSortAndPaginateTasks(
+      tasksData,
+      debounceSearchValue,
+      completedFilterState,
+      page,
+      limit,
+      sortBy,
+      sortOrder);
+    setTasksState(paginatedTasks);
+    setTotalCount(() => tasksData?.length)
 
-  const fetchTasks = async (page, limit, completedFilter, titleFilter) => {
-      const tasksData = await getTasks(page, limit, completedFilter, titleFilter);
-      setTasksState(tasksData);
-  };
+    const dataToStore = {
+      tasks: tasksData,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem('todoData', JSON.stringify(dataToStore));
+  }
+};
 
 
   const createAndInsertTask = async (data) => {
@@ -43,9 +78,18 @@ import Filters from './components/filters';
 
       await insertTask(newTaskData);
 
-      fetchTasks(page, limit, completedFilterState, debounceSearchValue)
+      const updatedTasks = await getTasks();
+
+      const dataToStore = {
+        tasks: updatedTasks,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem('todoData', JSON.stringify(dataToStore));
+
+      fetchTasks()
 
       setInsertState(() => false)
+      setRefresh((prev) => !prev)
   };
 
   const handleCompletedFilter = () => {
@@ -58,9 +102,8 @@ import Filters from './components/filters';
 
   useEffect(() => {
     handleCompletedFilter()
-    fetchTotalCount(completedFilterState, debounceSearchValue);
-    fetchTasks(page, limit, completedFilterState, debounceSearchValue);
-  }, [page, limit,completedFilterState, debounceSearchValue]);
+    fetchTasks();
+  }, [page, limit, debounceSearchValue,completedFilterState, refresh]);
 
   return (
     <ContainerPageTodo>
@@ -113,12 +156,8 @@ import Filters from './components/filters';
         {!tasksState?.length ? <div className='no_data'>No data</div> : null}
 
         <TodoItem  
-          tasksState={tasksState} 
-          onTasksChange={fetchTasks} 
-          page={page} 
-          limit={limit} 
-          titleFilterState={debounceSearchValue} 
-          completedFilterState={completedFilterState}
+          tasksState={tasksState}
+          setRefresh={setRefresh}
         />
 
         {tasksState?.length ? 

@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { deleteTask, updateTaskTitle } from '../../../axios/client-axios';
+import { deleteTask, getTasks, updateTask } from '../../../axios/client-axios';
 import SVGIconBin from '../../../svg/svg-icon-bin';
 import SVGIconEdit from '../../../svg/svg-icon-edit';
 
@@ -10,9 +10,16 @@ import SVGIconEdit from '../../../svg/svg-icon-edit';
   const [expandedTasks, setExpandedTasks] = React?.useState({});
 
   const handleDeleteTask = async (taskId) => {
-      await deleteTask(taskId);
+    await deleteTask(taskId);
 
-      props?.onTasksChange(props?.page, props?.limit, props?.completedFilterState, props?.titleFilterState);
+    const updatedTasks = await getTasks();
+
+    const dataToStore = {
+      tasks: updatedTasks,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem('todoData', JSON.stringify(dataToStore));
+    props?.setRefresh((prev) => !prev)
   };
 
 
@@ -24,8 +31,8 @@ import SVGIconEdit from '../../../svg/svg-icon-edit';
     }));
   };
 
-  const handleUpdateTaskTitle = async (taskId, updatedData) => {
-      await updateTaskTitle(taskId, updatedData);
+  const handleUpdateTask = async (taskId, updatedData) => {
+      await updateTask(taskId, updatedData);
 
       setEditStates((prevStates) => {
         const updatedStates = { ...prevStates };
@@ -34,8 +41,14 @@ import SVGIconEdit from '../../../svg/svg-icon-edit';
       });
 
       setUpdatedData((prev) => ({ ...prev, [taskId]: '' }));
+      const updatedTasks = await getTasks();
 
-      props?.onTasksChange(props?.page, props?.limit, props?.completedFilterState, props?.titleFilterState);
+      const dataToStore = {
+        tasks: updatedTasks,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem('todoData', JSON.stringify(dataToStore));
+      props?.setRefresh((prev) => !prev)
   };
 
 
@@ -59,7 +72,7 @@ import SVGIconEdit from '../../../svg/svg-icon-edit';
       [taskId]: !prevExpandedTasks[taskId],
     }));
   };
-  
+
   return (
     <ContainerTodoItem>
         {props?.tasksState?.map((task) => (
@@ -101,7 +114,7 @@ import SVGIconEdit from '../../../svg/svg-icon-edit';
                       className='save_button'
                       type='button'
                       onClick={() => {
-                        handleUpdateTaskTitle(task?.id, updatedData[task?.id]);
+                        handleUpdateTask(task?.id, updatedData[task?.id]);
                         handleToggleEdit(task?.id);
                       }}
                     >

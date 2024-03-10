@@ -5,7 +5,6 @@ import { SVGIconArrowRightThin } from '../../../svg/svg-icon-arrow-right-thin';
 
  const Paginator = (props) => {
   const totalPages = Math.ceil(props?.totalCount / props?.limit);
-  const pagesArray = Array.from({ length: totalPages }, (_, index) => index + 1);
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
