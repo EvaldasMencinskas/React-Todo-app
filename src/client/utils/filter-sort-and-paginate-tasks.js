@@ -21,11 +21,6 @@ export function filterSortAndPaginateTasks(tasks, titleFilter, completedFilter, 
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
   const paginatedTasks = sortedTasks.slice(startIndex, endIndex);
-  console.log('startIndex', startIndex)
-  console.log('endIndex', endIndex)
-  console.log('paginatedTasks', paginatedTasks)
-
-
 
   return paginatedTasks;
 }
