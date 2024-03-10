@@ -21,7 +21,6 @@ import { filterSortAndPaginateTasks } from '../../utils/filter-sort-and-paginate
   const [insertState, setInsertState] = React?.useState(false);
   const [insertDataState, setInsertDataState] = React?.useState(null);
   const [refresh, setRefresh] = React.useState(false);
-  // testas
 
   // possibility to use them for sorting from ui.
   const [sortOrder, setSortOrder] = React.useState('desc');
