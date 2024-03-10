@@ -1,4 +1,8 @@
-export function filterSortAndPaginateTasks(tasks, titleFilter, completedFilter, page, limit, sortBy, sortOrder) {
+export function filterSortAndPaginateTasks(tasks, titleFilter, completedFilter, pageInputValue, limitInputValue, sortBy, sortOrder) {
+
+  const page = parseInt(pageInputValue, 10);
+  const limit = parseInt(limitInputValue, 10);
+
   const filteredTasks = titleFilter
     ? tasks.filter(task =>
         task.title.toLowerCase().includes(titleFilter.toLowerCase())
@@ -17,6 +21,11 @@ export function filterSortAndPaginateTasks(tasks, titleFilter, completedFilter, 
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
   const paginatedTasks = sortedTasks.slice(startIndex, endIndex);
+  console.log('startIndex', startIndex)
+  console.log('endIndex', endIndex)
+  console.log('paginatedTasks', paginatedTasks)
+
+
 
   return paginatedTasks;
 }
